@@ -1,0 +1,2 @@
+../Core/Src/gsm.c:20:6:gsm_recieve_function	8	static
+../Core/Src/gsm.c:23:6:gsm_init	8	static

@@ -1,0 +1,2 @@
+../Core/Src/modbus.c:19:10:Modbus_CRC16	32	static
+../Core/Src/modbus.c:33:6:Process_Modbus_Frame	56	static
