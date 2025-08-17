@@ -46,10 +46,9 @@ States get_pir_state(uint32_t pir_1_time, uint32_t pir_2_time){
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 		  pir_state = IDLE;
-
 	  }
 
-	  else if ((pir_1_off_time > 1000) && (pir_2_off_time < 500)){      // emergency, red
+	  else if ((pir_1_off_time > 1000) && (pir_2_off_time < 1000) && (pir_state == ACTIVE)){      // emergency, red
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);

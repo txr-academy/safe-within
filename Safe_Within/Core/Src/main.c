@@ -195,7 +195,7 @@ int main(void)
 	          if (last_state != ALERT){
 	        	  alert_start_time = g_time; // set ONCE on entering ALERT
 	          }
-	          else if ((g_time - alert_start_time) >= 500){
+	          else if ((g_time - alert_start_time) >= 200){
 	        	  buzzer_on();
 //	              gsm_init();
 //	              Switch(GPIO_PIN_7);
