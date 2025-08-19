@@ -17,6 +17,8 @@ volatile uint32_t pir_2_time = 0;
 volatile uint32_t pir_1_off_time = 0;
 volatile uint32_t pir_2_off_time = 0;
 
+volatile int switch_count = 0;
+
 States pir_state;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -33,7 +35,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 
 	else if(GPIO_Pin == switch_Pin){
+//		HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
 		current_state = ACTIVE;
+		switch_count++;
+		HAL_Delay(1000);
+		NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
+
 	}
 }
 
@@ -54,7 +61,7 @@ States get_pir_state(uint32_t pir_1_time, uint32_t pir_2_time){
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 		  pir_state = ALERT;
 	  }
-	  else {     // ((pir_1_off_time < 500) && (pir_2_off_time < 500))     active state, blue
+	  else if ((pir_2_off_time < 1000) && (pir_2_off_time > 100) && (pir_1_off_time < 1000)){         		// active state, blue
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);

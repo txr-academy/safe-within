@@ -180,6 +180,7 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_UART_Receive_IT(&huart2, &data, 1);
+//  gsm_init();
 
   /* USER CODE END 2 */
 
@@ -188,25 +189,43 @@ int main(void)
   while (1)
   {
 //	  Switch(GPIO_PIN_7);
-
+//
+//
+//	   current_state = get_pir_state(pir_1_time,pir_2_time);
+//	   if (current_state == ALERT){
+//	          if (last_state != ALERT){
+//	        	  alert_start_time = g_time; // set ONCE on entering ALERT
+//	          }
+//	          else if ((g_time - alert_start_time) >= 200){
+//	        	  buzzer_on();
+//	              gsm_init();
+//	              Switch(GPIO_PIN_7);
+//	          }
+//	   }
+//
+//	   else { 							// Not in ALERT
+//		   alert_start_time = 0;
+//	       buzzer_off();
+//	   }
+//	   last_state = current_state;
 
 	   current_state = get_pir_state(pir_1_time,pir_2_time);
 	   if (current_state == ALERT){
-	          if (last_state != ALERT){
-	        	  alert_start_time = g_time; // set ONCE on entering ALERT
-	          }
-	          else if ((g_time - alert_start_time) >= 200){
-	        	  buzzer_on();
-//	              gsm_init();
-//	              Switch(GPIO_PIN_7);
-	          }
-	   }
+		   buzzer_on();
+		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
+		   HAL_Delay(2000);
+		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
+		   HAL_UART_Transmit(&huart4, (uint8_t*)"ATD+917994277760;\r\n", strlen("ATD+917994277760;\r\n"), HAL_MAX_DELAY);
+		   if ( switch_count > 0){
+			   buzzer_off();
+			   current_state = ACTIVE;
+			   switch_count = 0;
+		   }
 
-	   else { 							// Not in ALERT
-		   alert_start_time = 0;
-	       buzzer_off();
 	   }
-	   last_state = current_state;
+	   else{
+		   buzzer_off();
+	   }
 
 
 //	  if (uart_flag){
@@ -443,7 +462,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : PIR_1_Pin PIR_2_Pin */
   GPIO_InitStruct.Pin = PIR_1_Pin|PIR_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
@@ -476,7 +495,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : switch_Pin */
   GPIO_InitStruct.Pin = switch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(switch_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
