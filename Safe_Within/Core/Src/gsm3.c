@@ -7,10 +7,13 @@ extern UART_HandleTypeDef huart4;
 #define RX_BUFFER_SIZE 100
 #define GSM_ATD_MAX_RETRIES 3
 #define GSM_AT_MAX_RETRIES 3
-#define AT "AT"
-#define ATD "ATD+917994277760;"
+#define AT "AT\r\n"
+#define ATD "ATD+917994277760;\r\n"
 #define OK "OK"
-
+#define CMGF "AT+CMGF=1\r\n"
+#define CMGS "AT+CMGS=\"+918129409935\"\r\n"
+#define MSG "EMERGENCY AT HOME"
+#define CTRLZ 0x1A
 
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 uint16_t rx_len = 0;
@@ -23,7 +26,7 @@ int gsm_receive_response(uint32_t timeout_ms) {
 
 
     if (status == HAL_OK) {
-    	int len = huart4.RxXferSize - huart4.RxXferCount;
+    	int8_t len = huart4.RxXferSize - huart4.RxXferCount;
     	 rx_buffer[len] = '\0';
         return 1;  // Success
     } else {
@@ -33,17 +36,17 @@ int gsm_receive_response(uint32_t timeout_ms) {
 
 // Initialize GSM module
 int gsm_init(void) {
-	 int retries = 0;
+	 int8_t retries = 0;
     // 1. Send first AT command
-    HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 10);
+    HAL_UART_Transmit(&huart4, (uint8_t*)AT, strlen(AT), 10);
 //    gsm_receive_response(1000);
     HAL_Delay(1000);
     // 2. Send second AT command and receive response, verify echo and OK
     while (retries < GSM_AT_MAX_RETRIES) {
-    HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 10);
+    HAL_UART_Transmit(&huart4, (uint8_t*)AT, strlen(AT), 10);
     int16_t res_flag=gsm_receive_response(3000);
 
-    if (res_flag && strstr((char*)rx_buffer, "OK") != NULL) {
+    if (res_flag && strstr((char*)rx_buffer,OK) != NULL) {
         return 1; // Success
     }
     retries++;
@@ -63,11 +66,10 @@ int gsm_init(void) {
     	//retry AT command if expected response not received
 
 int gsm_call(void) {
-    char cmd[100]="ATD+917994277760;\r\n";
 
     int retries = 0;
     while (retries < GSM_ATD_MAX_RETRIES) {
-        HAL_UART_Transmit(&huart4, (uint8_t*)cmd, strlen(cmd),10);
+        HAL_UART_Transmit(&huart4, (uint8_t*)ATD, strlen(ATD),10);
         if (gsm_receive_response(3000) && strstr((char*)rx_buffer,OK) != NULL) {
 
                 return 1;
@@ -81,8 +83,16 @@ int gsm_call(void) {
 }
 
 int gsm_sms(){
+	 uint8_t ctrlz = CTRLZ;
+	 HAL_UART_Transmit(&huart4, (uint8_t*)CMGF, strlen(CMGF),10);
+	 if ((gsm_receive_response(3000)) && strstr((char*)rx_buffer,OK) != NULL){
+
+		 HAL_UART_Transmit(&huart4, (uint8_t*)CMGS, strlen(CMGS),10);
+		 HAL_UART_Transmit(&huart4, (uint8_t*)MSG, strlen(MSG),10);
+		     HAL_UART_Transmit(&huart4, &ctrlz, 1, 1000);
+		 }
 return 0;
-}
+	 }
 
 
 
