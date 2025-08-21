@@ -7,6 +7,7 @@ extern UART_HandleTypeDef huart4;
 #define RX_BUFFER_SIZE 100
 #define GSM_ATD_MAX_RETRIES 3
 #define GSM_AT_MAX_RETRIES 3
+#define GSM_SMS_MAX_RETRIES 3
 #define AT "AT\r\n"
 #define ATD "ATD+917994277760;\r\n"
 #define OK "OK"
@@ -84,13 +85,20 @@ int gsm_call(void) {
 
 int gsm_sms(){
 	 uint8_t ctrlz = CTRLZ;
+	 int retries=0;
+	 while(retries<GSM_SMS_MAX_RETRIES){
 	 HAL_UART_Transmit(&huart4, (uint8_t*)CMGF, strlen(CMGF),10);
 	 if ((gsm_receive_response(3000)) && strstr((char*)rx_buffer,OK) != NULL){
 
 		 HAL_UART_Transmit(&huart4, (uint8_t*)CMGS, strlen(CMGS),10);
 		 HAL_UART_Transmit(&huart4, (uint8_t*)MSG, strlen(MSG),10);
 		     HAL_UART_Transmit(&huart4, &ctrlz, 1, 1000);
+		     return 1;
 		 }
+
+		 retries++;
+		 HAL_Delay(2000);
+	 }
 return 0;
 	 }
 
