@@ -24,7 +24,9 @@
 #include "stdio.h"
 #include "pir.h"				// remove this later
 #include "buzzer.h"
-#include "gsm.h"
+//#include "gsm.h"
+//#include "gsm2.h"
+#include "gsm4.h"
 #include "switch.h"
 #include "string.h"
 #include "modbus.h"
@@ -59,6 +61,7 @@ volatile uint32_t uart_int_time = 0; // time of uart interrupt
 volatile uint32_t uart_idle_time = 0;  // uart idle time
 
 uart_t request_t, response_t;
+GSM_State_t result;
 
 uint8_t data = 0;
 int uart_index = 0;
@@ -101,37 +104,53 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	/*
 	 * 			Callback for gsm
 	 */
-    if (huart->Instance == huart4.Instance && gsm_state != GSM_STAGE_DONE) {
-        rx_len++;
-        if (rx_len < RX_BUFFER_SIZE - 1) {
-            rx_buffer[rx_len] = '\0';
-
-            if (strstr((char*)rx_buffer, "\r\nOK\r\n") != NULL) {
-                rx_len = 0; // Clear buffer for next command
-
-                if (gsm_state == GSM_STAGE_WAKE) {
-                    gsm_state = GSM_STAGE_ECHO_OFF;
-                    // Disable echo after wakeup
-                    HAL_UART_Transmit(&huart4, (uint8_t*)"ATE0\r\n", strlen("ATE0\r\n"), HAL_MAX_DELAY);
-
-                } else if (gsm_state == GSM_STAGE_ECHO_OFF) {
-                    gsm_state = GSM_STAGE_AT_SENT;
-                    // Send AT to confirm connection once more (optional)
-                    HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), HAL_MAX_DELAY);
-
-                } else if (gsm_state == GSM_STAGE_AT_SENT) {
-                    gsm_state = GSM_STAGE_DIAL;
-                    // Send dial command
-                    HAL_UART_Transmit(&huart4,
-                        (uint8_t*)"ATD+917994277760;\r\n",
-                        strlen("ATD+917994277760;\r\n"),
-                        HAL_MAX_DELAY);
-                    gsm_state = GSM_STAGE_DONE;
-                }
-            }
-            gsm_recieve_function();
+    if (huart->Instance == UART4)
+    {
+        if (sim_rx_index < SIM_RX_BUFFER_SIZE - 1)
+        {
+            sim_rx_buffer[sim_rx_index++] = sim_rx_byte;
         }
+
+        if (sim_rx_byte == '\n') // End of line detected
+        {
+            sim_rx_buffer[sim_rx_index] = '\0';  // Null terminate
+            line_ready = 1;
+            sim_rx_index = 0;
+        }
+
+        HAL_UART_Receive_IT(&huart4, &sim_rx_byte, 1);
     }
+//    if (huart->Instance == huart4.Instance && gsm_state != GSM_STAGE_DONE) {
+//        rx_len++;
+//        if (rx_len < RX_BUFFER_SIZE - 1) {
+//            rx_buffer[rx_len] = '\0';
+//
+//            if (strstr((char*)rx_buffer, "\r\nOK\r\n") != NULL) {
+//                rx_len = 0; // Clear buffer for next command
+//
+//                if (gsm_state == GSM_STAGE_WAKE) {
+//                    gsm_state = GSM_STAGE_ECHO_OFF;
+//                    // Disable echo after wakeup
+//                    HAL_UART_Transmit(&huart4, (uint8_t*)"ATE0\r\n", strlen("ATE0\r\n"), HAL_MAX_DELAY);
+//
+//                } else if (gsm_state == GSM_STAGE_ECHO_OFF) {
+//                    gsm_state = GSM_STAGE_AT_SENT;
+//                    // Send AT to confirm connection once more (optional)
+//                    HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), HAL_MAX_DELAY);
+//
+//                } else if (gsm_state == GSM_STAGE_AT_SENT) {
+//                    gsm_state = GSM_STAGE_DIAL;
+//                    // Send dial command
+//                    HAL_UART_Transmit(&huart4,
+//                        (uint8_t*)"ATD+917994277760;\r\n",
+//                        strlen("ATD+917994277760;\r\n"),
+//                        HAL_MAX_DELAY);
+//                    gsm_state = GSM_STAGE_DONE;
+//                }
+//            }
+//            gsm_recieve_function();
+//        }
+//    }
 }
 
 /* USER CODE END 0 */
@@ -179,7 +198,7 @@ int main(void)
 //  gsm_init();
 
   HAL_TIM_Base_Start_IT(&htim6);
-  HAL_UART_Receive_IT(&huart2, &data, 1);
+//  HAL_UART_Receive_IT(&huart2, &data, 1);
 //  gsm_init();
 
   /* USER CODE END 2 */
@@ -188,44 +207,104 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  Switch(GPIO_PIN_7);
-//
-//
-//	   current_state = get_pir_state(pir_1_time,pir_2_time);
-//	   if (current_state == ALERT){
-//	          if (last_state != ALERT){
-//	        	  alert_start_time = g_time; // set ONCE on entering ALERT
-//	          }
-//	          else if ((g_time - alert_start_time) >= 200){
-//	        	  buzzer_on();
-//	              gsm_init();
-//	              Switch(GPIO_PIN_7);
-//	          }
-//	   }
-//
+	  result = gsm_init();
+	  if (result == GSM_STATE_OK){
+		  result = gsm_call(EMERGENCY_CONTACT_1);
+		  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
+//		  if (result != GSM_STATE_OK){
+//			  result = gsm_init();
+//			  if (result == GSM_STATE_OK){
+//				  result = gsm_call(EMERGENCY_CONTACT_2);
+//				  if (result != GSM_STATE_OK){
+//					  result = gsm_init();
+//					  if (result == GSM_STATE_OK){
+//						  result = gsm_call(EMERGENCY_CONTACT_3);
+//						  if ( result != GSM_STATE_OK ){
+//							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+//							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+//							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+//						  }
+//					  }
+//				  }
+//			  }
+//		  }
+	  }
+  }
+	  /*
+	  current_state = get_pir_state(pir_1_time,pir_2_time);
+	  if (current_state == ALERT){
+		  if (last_state != ALERT){
+			  alert_start_time = g_time; // set ONCE on entering ALERT
+		  }
+		  else if ((g_time - alert_start_time) >= 1000){
+			  buzzer_on();
+			  result = gsm_init();
+			  if (result == GSM_STATE_OK)
+			  {
+				  result = gsm_call("917994277760");
+				  if (result != GSM_STATE_OK){
+				  	  result = gsm_init();
+				  	  if (result == GSM_STATE_OK){
+				  	  	  result = gsm_call(EMERGENCY_CONTACT_2);
+				  	  	  if (result != GSM_STATE_OK){
+				  	  	  	  result = gsm_init();
+				  	  	  	  if (result == GSM_STATE_OK){
+				  	  	  	  	  result = gsm_call(EMERGENCY_CONTACT_3);
+				  	  	  	  	  if ( result != GSM_STATE_OK ){
+				  	  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+		  	  	  	  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+		  	  	  	  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+		  	  	  	  	  	  	  }
+		  	  	  	  	  	  }
+		  	  	  	  	  }
+		  	  	  	  }
+		  	  	  }
+		  	  }
+			  else
+			  {
+				  		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+		  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+		  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+			  }
+		  }
+
+		  */
+//	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
+//	        	  HAL_Delay(2000);
+//	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
+//	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"ATD+917994277760;\r\n", strlen("ATD+917994277760;\r\n"), HAL_MAX_DELAY);
+//			  if ( switch_count == 0){
+//				  buzzer_off();
+//				  current_state = ACTIVE;
+//				  switch_count = 1;
+//				  HAL_Delay(15000);
+//			  }
+//	  }
+
 //	   else { 							// Not in ALERT
 //		   alert_start_time = 0;
 //	       buzzer_off();
 //	   }
 //	   last_state = current_state;
 
-	   current_state = get_pir_state(pir_1_time,pir_2_time);
-	   if (current_state == ALERT){
-		   buzzer_on();
-		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
-		   HAL_Delay(2000);
-		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
-		   HAL_UART_Transmit(&huart4, (uint8_t*)"ATD+917994277760;\r\n", strlen("ATD+917994277760;\r\n"), HAL_MAX_DELAY);
-		   if ( switch_count > 0){
-			   buzzer_off();
-			   current_state = ACTIVE;
-			   switch_count = 0;
-		   }
-
-	   }
-	   else{
-		   buzzer_off();
-	   }
+//	   current_state = get_pir_state(pir_1_time,pir_2_time);
+//	   if (current_state == ALERT){
+//		   buzzer_on();
+//		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
+//		   HAL_Delay(2000);
+//		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
+//		   HAL_UART_Transmit(&huart4, (uint8_t*)"ATD+917994277760;\r\n", strlen("ATD+917994277760;\r\n"), HAL_MAX_DELAY);
+//		   if ( switch_count == 0){
+//			   buzzer_off();
+//			   current_state = ACTIVE;
+//			   switch_count = 1;
+//			   HAL_Delay(15000);
+//		   }
+//
+//	   }
+//	   else{
+//		   buzzer_off();
+//	   }
 
 
 //	  if (uart_flag){
@@ -239,16 +318,16 @@ int main(void)
 //
 //		  }
 //	  }
-
-
-
-
-
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+//
+//
+//
+//
+//
+//    /* USER CODE END WHILE */
+//
+//    /* USER CODE BEGIN 3 */
+//  }
+//  /* USER CODE END 3 */
 }
 
 /**
@@ -351,7 +430,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 9600;
+  huart4.Init.BaudRate = 115200;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
