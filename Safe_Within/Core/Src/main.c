@@ -26,7 +26,7 @@
 #include "buzzer.h"
 //#include "gsm.h"
 //#include "gsm2.h"
-#include "gsm4.h"
+#include "gsm6.h"
 #include "switch.h"
 #include "string.h"
 #include "modbus.h"
@@ -61,7 +61,6 @@ volatile uint32_t uart_int_time = 0; // time of uart interrupt
 volatile uint32_t uart_idle_time = 0;  // uart idle time
 
 uart_t request_t, response_t;
-GSM_State_t result;
 
 uint8_t data = 0;
 int uart_index = 0;
@@ -109,13 +108,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
         if (sim_rx_index < SIM_RX_BUFFER_SIZE - 1)
         {
             sim_rx_buffer[sim_rx_index++] = sim_rx_byte;
-        }
-
-        if (sim_rx_byte == '\n') // End of line detected
-        {
-            sim_rx_buffer[sim_rx_index] = '\0';  // Null terminate
-            line_ready = 1;
-            sim_rx_index = 0;
         }
 
         HAL_UART_Receive_IT(&huart4, &sim_rx_byte, 1);
@@ -207,10 +199,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  result = gsm_init();
-	  if (result == GSM_STATE_OK){
-		  result = gsm_call(EMERGENCY_CONTACT_1);
-		  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
+	result = gsm_init();
+	if (result == GSM_STATE_OK){
+		result = gsm_call(EMERGENCY_CONTACT_1);
+		if (result == GSM_STATE_OK){
+			gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
+		}
+	}
 //		  if (result != GSM_STATE_OK){
 //			  result = gsm_init();
 //			  if (result == GSM_STATE_OK){
@@ -224,12 +219,20 @@ int main(void)
 //							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 //							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 //						  }
+//						  else{
+//							  gsm_sms(EMERGENCY_CONTACT_3, MESSAGE);
+//						  }
 //					  }
+//				  }
+//				  else {
+//					  gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
 //				  }
 //			  }
 //		  }
-	  }
-  }
+//		  else{
+//			  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
+//		  }
+//	  }
 	  /*
 	  current_state = get_pir_state(pir_1_time,pir_2_time);
 	  if (current_state == ALERT){
@@ -326,7 +329,7 @@ int main(void)
 //    /* USER CODE END WHILE */
 //
 //    /* USER CODE BEGIN 3 */
-//  }
+  }
 //  /* USER CODE END 3 */
 }
 
