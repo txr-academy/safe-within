@@ -187,7 +187,8 @@ int main(void)
 //  HAL_Delay(500);
 //  buzzer_off();
 //  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), HAL_MAX_DELAY);
-//  gsm_init();
+
+  result = gsm_init();
 
   HAL_TIM_Base_Start_IT(&htim6);
 //  HAL_UART_Receive_IT(&huart2, &data, 1);
@@ -199,13 +200,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	result = gsm_init();
-	if (result == GSM_STATE_OK){
-		result = gsm_call(EMERGENCY_CONTACT_1);
-		if (result == GSM_STATE_OK){
-			gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
-		}
-	}
 //		  if (result != GSM_STATE_OK){
 //			  result = gsm_init();
 //			  if (result == GSM_STATE_OK){
@@ -233,7 +227,7 @@ int main(void)
 //			  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
 //		  }
 //	  }
-	  /*
+
 	  current_state = get_pir_state(pir_1_time,pir_2_time);
 	  if (current_state == ALERT){
 		  if (last_state != ALERT){
@@ -241,28 +235,14 @@ int main(void)
 		  }
 		  else if ((g_time - alert_start_time) >= 1000){
 			  buzzer_on();
-			  result = gsm_init();
-			  if (result == GSM_STATE_OK)
-			  {
-				  result = gsm_call("917994277760");
-				  if (result != GSM_STATE_OK){
-				  	  result = gsm_init();
-				  	  if (result == GSM_STATE_OK){
-				  	  	  result = gsm_call(EMERGENCY_CONTACT_2);
-				  	  	  if (result != GSM_STATE_OK){
-				  	  	  	  result = gsm_init();
-				  	  	  	  if (result == GSM_STATE_OK){
-				  	  	  	  	  result = gsm_call(EMERGENCY_CONTACT_3);
-				  	  	  	  	  if ( result != GSM_STATE_OK ){
-				  	  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-		  	  	  	  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-		  	  	  	  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-		  	  	  	  	  	  	  }
-		  	  	  	  	  	  }
-		  	  	  	  	  }
-		  	  	  	  }
-		  	  	  }
-		  	  }
+			  result = gsm_wake();
+			  if (result == GSM_STATE_OK){
+				  result = gsm_call(EMERGENCY_CONTACT_1);
+				  if (result == GSM_STATE_OK){
+					  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
+				  }
+			  }
+
 			  else
 			  {
 				  		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
@@ -270,8 +250,8 @@ int main(void)
 		  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 			  }
 		  }
+	  }
 
-		  */
 //	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
 //	        	  HAL_Delay(2000);
 //	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
