@@ -285,6 +285,8 @@ int main(void)
 	  }
 
 	  time_check = g_time;
+	  pir_1_int_count = 0;
+	  pir_2_int_count = 0;
 
 /* integrated code
 	  current_state = get_pir_state(pir_1_time,pir_2_time);
