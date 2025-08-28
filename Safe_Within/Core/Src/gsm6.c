@@ -171,3 +171,21 @@ GSM_State_t gsm_sms(const char *number, const char *message)
 	return GSM_STATE_ERROR;
 
 }
+
+void init_recall_function(void)
+{
+    GSM_State_t result_wake;
+    result_wake = gsm_wake();
+    if (result_wake == GSM_STATE_OK) {
+        gsm_call(EMERGENCY_CONTACT_1);
+        gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
+        HAL_Delay(10000);
+        gsm_call(EMERGENCY_CONTACT_2);
+        gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
+        HAL_UART_Transmit(&huart4, (uint8_t*)echo_on, strlen(echo_on), HAL_MAX_DELAY);
+    }
+}
+
+
+
+

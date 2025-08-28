@@ -48,7 +48,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-CRC_HandleTypeDef hcrc;
+//CRC_HandleTypeDef hcrc;
 
 TIM_HandleTypeDef htim6;
 
@@ -62,8 +62,9 @@ volatile int uart_flag = 0;
 volatile uint32_t uart_int_time = 0; // time of uart interrupt
 volatile uint32_t uart_idle_time = 0;  // uart idle time
 uint32_t time_check = 0;
+uint32_t emergency_time_check = 0;
 
-uart_t request_t, response_t;
+//uart_t request_t, response_t;
 
 uint8_t data = 0;
 int uart_index = 0;
@@ -249,7 +250,7 @@ int main(void)
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 			  pir_state = ALERT;
 		  }
-		  else if ((pir_1_int_count == 0) && (pir_2_int_count == 0)){
+		  else if ((pir_1_int_count <= 2) && (pir_2_int_count <= 2)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
@@ -258,33 +259,41 @@ int main(void)
 		  }
 
 		  if (pir_state == ALERT){
-			  buzzer_on();
-			  result = gsm_wake();
-			  if (result == GSM_STATE_OK){
-				  result = gsm_call(EMERGENCY_CONTACT_1);
-				  if (result == GSM_STATE_OK){
-					  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
-				  }
-			  }
-		  }
+			 if (g_time - emergency_time_check > 1000){
+
+				 	  if(result==GSM_STATE_OK){
+				 		 init_recall_function();
+				 	      }
+
+				 		 else
+				 			  {
+				 			 gsm_init();
+				 			 init_recall_function();
+
+				 			  }
+
+		             }
+
+
 		  else {
 			  buzzer_off();
-		  }
+		       }
 
-		  if (uart_flag){
-			  uart_idle_time = g_time - uart_int_time;
-			  if (uart_idle_time > UART_TIMEOUT){
-				  memcpy(request_t.message, modbus_frame, uart_index);
-				  request_t.size = uart_index;
-				  uart_index = 0;
-				  uart_flag = 0;
-				  Process_Modbus_Frame(modbus_frame);
-
-			  }
-		  }
+//		  if (uart_flag){
+//			  uart_idle_time = g_time - uart_int_time;
+//			  if (uart_idle_time > UART_TIMEOUT){
+//				  memcpy(request_t.message, modbus_frame, uart_index);
+//				  request_t.size = uart_index;
+//				  uart_index = 0;
+//				  uart_flag = 0;
+//				  Process_Modbus_Frame(modbus_frame);
+//
+//			  }
+//		  }
 	  }
 
 	  time_check = g_time;
+	  emergency_time_check=g_time;
 	  pir_1_int_count = 0;
 	  pir_2_int_count = 0;
 
@@ -374,7 +383,7 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
-
+}
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -436,11 +445,11 @@ static void MX_CRC_Init(void)
   /* USER CODE BEGIN CRC_Init 1 */
 
   /* USER CODE END CRC_Init 1 */
-  hcrc.Instance = CRC;
-  if (HAL_CRC_Init(&hcrc) != HAL_OK)
-  {
-    Error_Handler();
-  }
+//  hcrc.Instance = CRC;
+//  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
