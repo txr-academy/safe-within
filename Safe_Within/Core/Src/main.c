@@ -64,7 +64,7 @@ volatile uint32_t uart_idle_time = 0;  // uart idle time
 uint32_t time_check = 0;
 uint32_t emergency_time_check = 0;
 
-//uart_t request_t, response_t;
+uart_t request_t, response_t;
 
 uint8_t data = 0;
 int uart_index = 0;
@@ -201,6 +201,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);
 //  HAL_UART_Receive_IT(&huart2, &data, 1);
 //  gsm_init();
+  time_check = g_time;
 
   /* USER CODE END 2 */
 
@@ -238,6 +239,7 @@ int main(void)
 
 	  while ((g_time - time_check) < 2000)
 	  {
+
 		  if ((pir_1_int_count > 3) && (pir_2_int_count > 3)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
@@ -249,6 +251,8 @@ int main(void)
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 			  pir_state = ALERT;
+			  emergency_time_check = g_time;
+			  break;
 		  }
 		  else if ((pir_1_int_count <= 2) && (pir_2_int_count <= 2)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
@@ -258,42 +262,72 @@ int main(void)
 
 		  }
 
-		  if (pir_state == ALERT){
-			 if (g_time - emergency_time_check > 1000){
-
-				 	  if(result==GSM_STATE_OK){
-				 		 init_recall_function();
-				 	      }
-
-				 		 else
-				 			  {
-				 			 gsm_init();
-				 			 init_recall_function();
-
-				 			  }
-
-		             }
-
-
-		  else {
+		  if (switch_count == 0){
 			  buzzer_off();
-		       }
+			  pir_state = ACTIVE;
+		  }
 
-//		  if (uart_flag){
-//			  uart_idle_time = g_time - uart_int_time;
-//			  if (uart_idle_time > UART_TIMEOUT){
-//				  memcpy(request_t.message, modbus_frame, uart_index);
-//				  request_t.size = uart_index;
-//				  uart_index = 0;
-//				  uart_flag = 0;
-//				  Process_Modbus_Frame(modbus_frame);
-//
+
+		  if (uart_flag){
+			  uart_idle_time = g_time - uart_int_time;
+			  if (uart_idle_time > UART_TIMEOUT){
+				  memcpy(request_t.message, modbus_frame, uart_index);
+				  request_t.size = uart_index;
+				  uart_index = 0;
+				  uart_flag = 0;
+				  Process_Modbus_Frame(modbus_frame);
+
+			  }
+		  }
+	  }
+
+//	  if (pir_state == ALERT){
+//		  if (g_time - emergency_time_check > 1000){
+//			  if(result==GSM_STATE_OK){
+//				  buzzer_on();
+//				  init_recall_function();
+//			  }
+//			  else
+//			  {
+//				  gsm_init();
+//				  init_recall_function();
 //			  }
 //		  }
+//		  else {
+//			  buzzer_off();
+//		  }
+//	  }
+
+	  if (pir_state == ALERT){
+		  if (result == GSM_STATE_OK){
+			  buzzer_on();
+			  init_recall_function();
+		  }
+		  else{
+			  gsm_init();
+			  init_recall_function();
+		  }
+	  }
+
+	  else {
+		  buzzer_off();
+	  }
+
+
+	  if (uart_flag){
+		  uart_idle_time = g_time - uart_int_time;
+		  if (uart_idle_time > UART_TIMEOUT){
+			  memcpy(request_t.message, modbus_frame, uart_index);
+			  request_t.size = uart_index;
+			  uart_index = 0;
+			  uart_flag = 0;
+			  Process_Modbus_Frame(modbus_frame);
+
+		  }
 	  }
 
 	  time_check = g_time;
-	  emergency_time_check=g_time;
+	  emergency_time_check = 0;
 	  pir_1_int_count = 0;
 	  pir_2_int_count = 0;
 
@@ -376,14 +410,13 @@ int main(void)
 //
 //
 //
-//
+  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+}
   /* USER CODE END 3 */
-}
-}
+
 /**
   * @brief System Clock Configuration
   * @retval None
