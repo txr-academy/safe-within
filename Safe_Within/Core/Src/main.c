@@ -30,6 +30,7 @@
 #include "switch.h"
 #include "string.h"
 #include "modbus.h"
+#include "i2c.h"
 //#include "modbus.h"
 /* USER CODE END Includes */
 
@@ -48,7 +49,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-//CRC_HandleTypeDef hcrc;
+CRC_HandleTypeDef hcrc;
+
+I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim6;
 
@@ -81,6 +84,7 @@ static void MX_TIM6_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_UART4_Init(void);
 static void MX_CRC_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -185,17 +189,18 @@ int main(void)
   MX_USART2_UART_Init();
   MX_UART4_Init();
   MX_CRC_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   States pir_state;
 
   /*
    * Testing the peripherals
    */
-//  buzzer_on();
-//  HAL_Delay(500);
-//  buzzer_off();
-//  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), HAL_MAX_DELAY);
+  buzzer_on();
+  HAL_Delay(500);
+  buzzer_off();
 
+  GSM_Reset();
   result = gsm_init();
 
   HAL_TIM_Base_Start_IT(&htim6);
@@ -203,12 +208,42 @@ int main(void)
 //  gsm_init();
   time_check = g_time;
 
+  uint16_t EepromAddress = 80;
+  uint16_t DevAddress = EepromAddress << 1;
+  uint8_t Transmit_data[3] = {0x00, 0x00, 0xAA};
+  uint8_t Read_address[2] = {0x00, 0x00};
+//  uint16_t Data_size = 1;
+  uint8_t Received_data = 0;
+  HAL_StatusTypeDef i2c_status;
+
+  i2c_status = HAL_I2C_IsDeviceReady(&hi2c1, DevAddress, (uint32_t)I2C_TRIALS, (uint32_t)AT_TIMEOUT);
+  if (i2c_status == HAL_OK){
+	  HAL_I2C_Master_Transmit(&hi2c1, DevAddress, Transmit_data, 3, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Transmit(&hi2c1, DevAddress, Read_address, 2, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, DevAddress, Received_data, 1, HAL_MAX_DELAY);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  /*
+	   * Testing the gsm functions_latest
+	   */
+
+	  int gsm_count=0;
+      while(gsm_count <=3){
+		  if (result == GSM_STATE_OK){
+			  call_sms_function();
+		  }
+		  else{
+			  result=gsm_init();
+			  gsm_count++;
+		  }
+	  }
+
+/*
 //		  if (result != GSM_STATE_OK){
 //			  result = gsm_init();
 //			  if (result == GSM_STATE_OK){
@@ -301,12 +336,13 @@ int main(void)
 	  if (pir_state == ALERT){
 		  if (result == GSM_STATE_OK){
 			  buzzer_on();
-			  init_recall_function();
+			  //init_recall_function();
 		  }
 		  else{
 			  gsm_init();
-			  init_recall_function();
+			  //init_recall_function();
 		  }
+		  init_recall_function();
 	  }
 
 	  else {
@@ -478,14 +514,48 @@ static void MX_CRC_Init(void)
   /* USER CODE BEGIN CRC_Init 1 */
 
   /* USER CODE END CRC_Init 1 */
-//  hcrc.Instance = CRC;
-//  if (HAL_CRC_Init(&hcrc) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  hcrc.Instance = CRC;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 400000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 160;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
 
 }
 
