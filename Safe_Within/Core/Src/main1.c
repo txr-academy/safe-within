@@ -200,8 +200,8 @@ int main(void)
   buzzer_off();
 //  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), HAL_MAX_DELAY);
 //  echo_on();
-  char reset_cmd[] = "AT&F\r\n";
-  HAL_UART_Transmit(&huart4, (uint8_t*)reset_cmd, strlen(reset_cmd), HAL_MAX_DELAY);
+
+  GSM_Reset();
   result = gsm_init();
   if(result!=GSM_STATE_OK){
 	  while(1){
@@ -317,7 +317,7 @@ int main(void)
 	  int gsm_count=0;
       while(gsm_count <=3){
 		  if (result == GSM_STATE_OK){
-			  buzzer_on();
+			  //buzzer_on();
 			  call_sms_function();
 //
 		  }

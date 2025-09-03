@@ -212,7 +212,7 @@ void call_sms_function(void)
        if (result_wake == GSM_STATE_OK) {
            gsm_call(EMERGENCY_CONTACT_1);
            gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
-           HAL_Delay(20000);
+           HAL_Delay(10000);
            gsm_call(EMERGENCY_CONTACT_2);
            gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
 //        HAL_UART_Transmit(&huart4, (uint8_t*)echo_on, strlen(echo_on), HAL_MAX_DELAY);
@@ -245,4 +245,20 @@ void call_sms_function(void)
 //		}
 //}
 //
+
+
+
+  // UART4 handle created by CubeMX
+
+void GSM_Reset(void)
+{
+	    uint8_t esc = 0x1B;  // ESC key
+	    HAL_UART_Transmit(&huart4, &esc, 1, HAL_MAX_DELAY);
+	    HAL_Delay(200);
+	    HAL_UART_Transmit(&huart4, &esc, 1, HAL_MAX_DELAY);
+	    HAL_Delay(200);
+}
+
+
+
 //
