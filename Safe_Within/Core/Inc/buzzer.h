@@ -10,6 +10,10 @@
 
 #include "main.h"
 
+/*
+ * Functions to turn the buzzer ON/OFF
+ */
+
 void buzzer_on(void);
 void buzzer_off(void);
 

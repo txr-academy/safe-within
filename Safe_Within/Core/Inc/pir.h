@@ -11,23 +11,8 @@
 #include "stdint.h"
 #include "main.h"
 
-#define FLAG_ON 1
-#define FLAG_OFF 0
-extern volatile int pir_1_flag;
-extern volatile int pir_2_flag;
 extern volatile int pir_1_int_count;
 extern volatile int pir_2_int_count;
-extern volatile uint32_t pir_1_time;
-extern volatile uint32_t pir_2_time;
-extern volatile uint32_t pir_1_off_time;
-extern volatile uint32_t pir_2_off_time;
-extern volatile int switch_count;
-extern States pir_state;
-
-States get_pir_state(uint32_t pir_1_time, uint32_t pir_2_time);
-
-//typedef enum {
-//	IDLE , ACTIVE, ALERT
-//} States;
+extern volatile int switch_flag;
 
 #endif /* INC_PIR_H_ */

@@ -22,16 +22,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
-#include "pir.h"				// remove this later
+#include "pir.h"
 #include "buzzer.h"
-//#include "gsm.h"
-//#include "gsm2.h"
-#include "gsm6.h"
+#include "gsm.h"
 #include "switch.h"
 #include "string.h"
 #include "modbus.h"
 #include "i2c.h"
-//#include "modbus.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,8 +46,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-CRC_HandleTypeDef hcrc;
-
 I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim6;
@@ -59,22 +54,24 @@ UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+/*
+ * Timer
+ */
 volatile uint32_t g_time = 0;
+
+/*
+ * UART
+ */
 volatile int uart_flag = 0;
-
-volatile uint32_t uart_int_time = 0; // time of uart interrupt
-volatile uint32_t uart_idle_time = 0;  // uart idle time
-uint32_t time_check = 0;
-uint32_t emergency_time_check = 0;
-
-uart_t request_t, response_t;
-
+volatile uint32_t uart_int_time = 0;
+volatile uint32_t uart_idle_time = 0;
 uint8_t data = 0;
 int uart_index = 0;
+uart_t request_t, response_t;
 
-States current_state = IDLE;
-States last_state = IDLE;
-uint32_t alert_start_time = 0;
+uint32_t time_check = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,7 +80,6 @@ static void MX_GPIO_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_UART4_Init(void);
-static void MX_CRC_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -118,40 +114,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
         {
             sim_rx_buffer[sim_rx_index++] = sim_rx_byte;
         }
-
         HAL_UART_Receive_IT(&huart4, &sim_rx_byte, 1);
     }
-//    if (huart->Instance == huart4.Instance && gsm_state != GSM_STAGE_DONE) {
-//        rx_len++;
-//        if (rx_len < RX_BUFFER_SIZE - 1) {
-//            rx_buffer[rx_len] = '\0';
-//
-//            if (strstr((char*)rx_buffer, "\r\nOK\r\n") != NULL) {
-//                rx_len = 0; // Clear buffer for next command
-//
-//                if (gsm_state == GSM_STAGE_WAKE) {
-//                    gsm_state = GSM_STAGE_ECHO_OFF;
-//                    // Disable echo after wakeup
-//                    HAL_UART_Transmit(&huart4, (uint8_t*)"ATE0\r\n", strlen("ATE0\r\n"), HAL_MAX_DELAY);
-//
-//                } else if (gsm_state == GSM_STAGE_ECHO_OFF) {
-//                    gsm_state = GSM_STAGE_AT_SENT;
-//                    // Send AT to confirm connection once more (optional)
-//                    HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), HAL_MAX_DELAY);
-//
-//                } else if (gsm_state == GSM_STAGE_AT_SENT) {
-//                    gsm_state = GSM_STAGE_DIAL;
-//                    // Send dial command
-//                    HAL_UART_Transmit(&huart4,
-//                        (uint8_t*)"ATD+917994277760;\r\n",
-//                        strlen("ATD+917994277760;\r\n"),
-//                        HAL_MAX_DELAY);
-//                    gsm_state = GSM_STAGE_DONE;
-//                }
-//            }
-//            gsm_recieve_function();
-//        }
-//    }
+
 }
 
 /* USER CODE END 0 */
@@ -188,7 +153,6 @@ int main(void)
   MX_TIM6_Init();
   MX_USART2_UART_Init();
   MX_UART4_Init();
-  MX_CRC_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   States pir_state;
@@ -200,14 +164,15 @@ int main(void)
   HAL_Delay(500);
   buzzer_off();
 
-  GSM_Reset();
+  gsm_reset();
   result = gsm_init();
 
   HAL_TIM_Base_Start_IT(&htim6);
-//  HAL_UART_Receive_IT(&huart2, &data, 1);
-//  gsm_init();
   time_check = g_time;
 
+  /*
+   * 	Testing I2C
+   */
   uint16_t EepromAddress = 80;
   uint16_t DevAddress = EepromAddress << 1;
   uint8_t Transmit_data[3] = {0x00, 0x00, 0xAA};
@@ -228,68 +193,24 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  /*
-	   * Testing the gsm functions_latest
-	   */
 
-	  int gsm_count=0;
-      while(gsm_count <=3){
-		  if (result == GSM_STATE_OK){
-			  call_sms_function();
-		  }
-		  else{
-			  result=gsm_init();
-			  gsm_count++;
-		  }
-	  }
-
-/*
-//		  if (result != GSM_STATE_OK){
-//			  result = gsm_init();
-//			  if (result == GSM_STATE_OK){
-//				  result = gsm_call(EMERGENCY_CONTACT_2);
-//				  if (result != GSM_STATE_OK){
-//					  result = gsm_init();
-//					  if (result == GSM_STATE_OK){
-//						  result = gsm_call(EMERGENCY_CONTACT_3);
-//						  if ( result != GSM_STATE_OK ){
-//							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-//							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-//							  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-//						  }
-//						  else{
-//							  gsm_sms(EMERGENCY_CONTACT_3, MESSAGE);
-//						  }
-//					  }
-//				  }
-//				  else {
-//					  gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
-//				  }
-//			  }
-//		  }
-//		  else{
-//			  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
-//		  }
-//	  }
-
-	  while ((g_time - time_check) < 2000)
+	  while ((g_time - time_check) < PIR_MONITOR_INTERVAL)
 	  {
 
-		  if ((pir_1_int_count > 3) && (pir_2_int_count > 3)){
+		  if ((pir_1_int_count > INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 			  pir_state = ACTIVE;
 		  }
-		  else if ((pir_1_int_count < 3) && (pir_2_int_count > 3)){
+		  else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 			  pir_state = ALERT;
-			  emergency_time_check = g_time;
 			  break;
 		  }
-		  else if ((pir_1_int_count <= 2) && (pir_2_int_count <= 2)){
+		  else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count <= INTERRUPT_THRESHOLD)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
@@ -297,7 +218,7 @@ int main(void)
 
 		  }
 
-		  if (switch_count == 0){
+		  if (switch_flag == 0){
 			  buzzer_off();
 			  pir_state = ACTIVE;
 		  }
@@ -316,33 +237,18 @@ int main(void)
 		  }
 	  }
 
-//	  if (pir_state == ALERT){
-//		  if (g_time - emergency_time_check > 1000){
-//			  if(result==GSM_STATE_OK){
-//				  buzzer_on();
-//				  init_recall_function();
-//			  }
-//			  else
-//			  {
-//				  gsm_init();
-//				  init_recall_function();
-//			  }
-//		  }
-//		  else {
-//			  buzzer_off();
-//		  }
-//	  }
-
 	  if (pir_state == ALERT){
-		  if (result == GSM_STATE_OK){
-			  buzzer_on();
-			  //init_recall_function();
+		  buzzer_on();
+		  int gsm_count=0;
+		  while(gsm_count <= MAX_GSM_INIT_ATTEMPTS){
+			  if (result == GSM_STATE_OK){
+				  call_sms_function();
+			  }
+			  else{
+				  result=gsm_init();
+				  gsm_count++;
+			  }
 		  }
-		  else{
-			  gsm_init();
-			  //init_recall_function();
-		  }
-		  init_recall_function();
 	  }
 
 	  else {
@@ -362,96 +268,20 @@ int main(void)
 		  }
 	  }
 
+	  // re-assigning for each interval check
 	  time_check = g_time;
-	  emergency_time_check = 0;
 	  pir_1_int_count = 0;
 	  pir_2_int_count = 0;
 
-/* integrated code
-	  current_state = get_pir_state(pir_1_time,pir_2_time);
-	  if (current_state == ALERT){
-		  if (last_state != ALERT){
-			  alert_start_time = g_time; // set ONCE on entering ALERT
-		  }
-		  else if ((g_time - alert_start_time) >= 1000){
-			  buzzer_on();
-			  result = gsm_wake();
-			  if (result == GSM_STATE_OK){
-				  result = gsm_call(EMERGENCY_CONTACT_1);
-				  if (result == GSM_STATE_OK){
-					  gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
-				  }
-			  }
-
-			  else
-			  {
-				  		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-		  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-		  	  	  	  	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-			  }
-		  }
-	  }
-*/
-
-//	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
-//	        	  HAL_Delay(2000);
-//	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
-//	        	  HAL_UART_Transmit(&huart4, (uint8_t*)"ATD+917994277760;\r\n", strlen("ATD+917994277760;\r\n"), HAL_MAX_DELAY);
-//			  if ( switch_count == 0){
-//				  buzzer_off();
-//				  current_state = ACTIVE;
-//				  switch_count = 1;
-//				  HAL_Delay(15000);
-//			  }
-//	  }
-
-//	   else { 							// Not in ALERT
-//		   alert_start_time = 0;
-//	       buzzer_off();
-//	   }
-//	   last_state = current_state;
-
-//	   current_state = get_pir_state(pir_1_time,pir_2_time);
-//	   if (current_state == ALERT){
-//		   buzzer_on();
-//		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
-//		   HAL_Delay(2000);
-//		   HAL_UART_Transmit(&huart4, (uint8_t*)"AT\r\n", strlen("AT\r\n"), 1000);
-//		   HAL_UART_Transmit(&huart4, (uint8_t*)"ATD+917994277760;\r\n", strlen("ATD+917994277760;\r\n"), HAL_MAX_DELAY);
-//		   if ( switch_count == 0){
-//			   buzzer_off();
-//			   current_state = ACTIVE;
-//			   switch_count = 1;
-//			   HAL_Delay(15000);
-//		   }
-//
-//	   }
-//	   else{
-//		   buzzer_off();
-//	   }
-
-
-//	  if (uart_flag){
-//		  uart_idle_time = g_time - uart_int_time;
-//		  if (uart_idle_time > UART_TIMEOUT){
-//			  memcpy(request_t.message, modbus_frame, uart_index);
-//			  request_t.size = uart_index;
-//			  uart_index = 0;
-//			  uart_flag = 0;
-//			  Process_Modbus_Frame(modbus_frame);
-//
-//		  }
-//	  }
-//
-//
-//
-//
   }
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 }
   /* USER CODE END 3 */
+
 
 /**
   * @brief System Clock Configuration
@@ -497,32 +327,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief CRC Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_CRC_Init(void)
-{
-
-  /* USER CODE BEGIN CRC_Init 0 */
-
-  /* USER CODE END CRC_Init 0 */
-
-  /* USER CODE BEGIN CRC_Init 1 */
-
-  /* USER CODE END CRC_Init 1 */
-  hcrc.Instance = CRC;
-  if (HAL_CRC_Init(&hcrc) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CRC_Init 2 */
-
-  /* USER CODE END CRC_Init 2 */
-
 }
 
 /**

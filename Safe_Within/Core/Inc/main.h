@@ -51,6 +51,7 @@ extern volatile int uart_flag;
 
 extern volatile uint32_t uart_int_time;
 extern volatile uint32_t uart_idle_time;
+extern uint32_t time_check;
 
 typedef struct{
 	uint8_t message[8];
@@ -61,15 +62,14 @@ typedef enum {
 	IDLE , ACTIVE, ALERT
 } States;
 
-extern States current_state;
-extern States last_state;
-extern uint32_t alert_start_time;
 
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 #define UART_TIMEOUT 1
+#define PIR_MONITOR_INTERVAL 2000
+#define INTERRUPT_THRESHOLD 2
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
