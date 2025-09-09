@@ -1,6 +1,7 @@
 /*
- * switch.h
- *
+ * @file switch.h
+ * @brief Header for GPIO switch state detection functions for STM32
+ * Declares function for reading switch state from a GPIO pin.
  *  Created on: Aug 13, 2025
  *      Author: abhir
  */

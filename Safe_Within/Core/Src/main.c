@@ -46,31 +46,32 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
+/* I2C handle for EEPROM communication */
 I2C_HandleTypeDef hi2c1;
 
+/* Timer handle */
 TIM_HandleTypeDef htim6;
 
-UART_HandleTypeDef huart4;
-UART_HandleTypeDef huart2;
+/* UART handles */
+UART_HandleTypeDef huart4;   // UART4 for GSM
+UART_HandleTypeDef huart2;   // UART2 for MODBUS
 
 /* USER CODE BEGIN PV */
 
-/*
- * Timer
- */
+/* Global Timer variable */
 volatile uint32_t g_time = 0;
 
 /*
- * UART
+ * UART Modbus
  */
-volatile int uart_flag = 0;
-volatile uint32_t uart_int_time = 0;
-volatile uint32_t uart_idle_time = 0;
-uint8_t data = 0;
-int uart_index = 0;
-uart_t request_t, response_t;
+volatile int uart_flag = 0;              // Frame received indicator
+volatile uint32_t uart_int_time = 0;     // Interrupt time reference
+volatile uint32_t uart_idle_time = 0;    // Idle time counter
+uint8_t data = 0;                        // 1-byte buffer for USART2 data
+int uart_index = 0;                      // Index for assembling modbus frame
+uart_t request_t, response_t;            // UART request and response buffers
 
-uint32_t time_check = 0;
 
 /* USER CODE END PV */
 
@@ -88,33 +89,44 @@ static void MX_I2C1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+/**
+ * @brief Callback: Timer Period Elapsed
+ *
+ * This is called whenever TIM6 overflows. Used as global timebase (g_time).
+ */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM6) {
-    	g_time++ ;
+    	g_time++ ;    //    Tick counter (ms resolution)
     }
 }
 
+
+/**
+ * @brief Callback: UART Receive Complete
+ *
+ * Handles USART2 (Modbus) and UART4 (GSM) reception logic.
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	/*
-	 * 		Callback for modbus
+	 * 		Callback for MODBUS (UART2)
 	 */
 	if (huart->Instance == USART2){
-		uart_flag = 1;
-		uart_int_time = g_time;
-		modbus_frame[uart_index++] = data;
-		HAL_UART_Receive_IT(&huart2, &data, 1);
+		uart_flag = 1;                              // Indicate frame reception started
+		uart_int_time = g_time;                     // Used as a clock watch
+		modbus_frame[uart_index++] = data;          // Store data into modbus
+		HAL_UART_Receive_IT(&huart2, &data, 1);     // Restart reception
 	}
 
 	/*
-	 * 			Callback for gsm
+	 * 			Callback for GSM  (UART4)
 	 */
     if (huart->Instance == UART4)
     {
         if (sim_rx_index < SIM_RX_BUFFER_SIZE - 1)
         {
-            sim_rx_buffer[sim_rx_index++] = sim_rx_byte;
+            sim_rx_buffer[sim_rx_index++] = sim_rx_byte;    // Save incoming GSM char
         }
-        HAL_UART_Receive_IT(&huart4, &sim_rx_byte, 1);
+        HAL_UART_Receive_IT(&huart4, &sim_rx_byte, 1);     // Restart reception
     }
 
 }
@@ -158,17 +170,20 @@ int main(void)
   States pir_state;
 
   /*
-   * Testing the peripherals
+   *  Trigger buzzer for short time to indicate that  device is  activated
    */
   buzzer_on();
   HAL_Delay(500);
   buzzer_off();
 
+
+  /* Initialize GSM module */
   gsm_reset();
   result = gsm_init();
 
+  /* Start TIM6 as periodic interrupt (timebase) */
   HAL_TIM_Base_Start_IT(&htim6);
-  time_check = g_time;
+  time_check = g_time;  // Reference time for PIR  state monitoring
 
   /*
    * 	Testing I2C
@@ -191,39 +206,48 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+                                 /* Main Loop */
   while (1)
   {
-
+	  /* Monitor PIR sensors in given interval */
 	  while ((g_time - time_check) < PIR_MONITOR_INTERVAL)
 	  {
 
+		  // Case 1: Both PIRs active
 		  if ((pir_1_int_count > INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 			  pir_state = ACTIVE;
+			  // LED-Blue ON
 		  }
+		  // Case 2: One PIR abnormal -> Alert mode
 		  else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 			  pir_state = ALERT;
 			  break;
+			  // LED-Red ON
 		  }
+		  // Case 3: Both inactive -> Idle mode
 		  else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count <= INTERRUPT_THRESHOLD)){
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 			  pir_state = IDLE;
+			  // LED-Green ON
 
 		  }
 
+		  // Manual override using switch
 		  if (switch_flag == 0){
 			  buzzer_off();
 			  pir_state = ACTIVE;
 		  }
 
-
+		  // Handle Modbus data if frame received
 		  if (uart_flag){
 			  uart_idle_time = g_time - uart_int_time;
 			  if (uart_idle_time > UART_TIMEOUT){
@@ -237,25 +261,29 @@ int main(void)
 		  }
 	  }
 
+
+	  /* PIR ALERT state -> trigger buzzer and GSM call/sms */
 	  if (pir_state == ALERT){
-		  buzzer_on();
-		  int gsm_count=0;
+		  buzzer_on();    // Trigger buzzer
+		  int gsm_count=0;   //Initialize gsm_counter as 0.
+
+		  // Check for result response and retry upto 3 times until  result == GSM_STATE_OK
 		  while(gsm_count <= MAX_GSM_INIT_ATTEMPTS){
 			  if (result == GSM_STATE_OK){
-				  call_sms_function();
+				  call_sms_function();  // Trigger Call and SMS via GSM
 			  }
 			  else{
-				  result=gsm_init();
-				  gsm_count++;
+				  result=gsm_init();  // Retry initialization
+				  gsm_count++;  // Increment gsm_counter until its value <=3
 			  }
 		  }
 	  }
 
 	  else {
-		  buzzer_off();
+		  buzzer_off();  // Buzzer-OfF if pir_state is other than ALERT
 	  }
 
-
+	  /* Check again for Modbus frame completion */
 	  if (uart_flag){
 		  uart_idle_time = g_time - uart_int_time;
 		  if (uart_idle_time > UART_TIMEOUT){
@@ -268,7 +296,7 @@ int main(void)
 		  }
 	  }
 
-	  // re-assigning for each interval check
+	  // reset counters and timestamps  for each interval check
 	  time_check = g_time;
 	  pir_1_int_count = 0;
 	  pir_2_int_count = 0;

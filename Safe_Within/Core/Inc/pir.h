@@ -1,8 +1,8 @@
 /*
- * pir.h
- *
+ * @brief PIR sensor and switch interrupt counter variables declaration
+ * Declares volatile external variables used for PIR interrupt counts and switch flag.
  *  Created on: Jul 30, 2025
- *      Author: abhir
+ *      Author: abhiram and anandu
  */
 
 #ifndef INC_PIR_H_
@@ -11,8 +11,13 @@
 #include "stdint.h"
 #include "main.h"
 
+/** @brief PIR sensor 1 external interrupt count */
 extern volatile int pir_1_int_count;
+
+/** @brief PIR sensor 2 external interrupt count */
 extern volatile int pir_2_int_count;
+
+/** @brief External switch flag */
 extern volatile int switch_flag;
 
 #endif /* INC_PIR_H_ */

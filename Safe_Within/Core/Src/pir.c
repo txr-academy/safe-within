@@ -1,14 +1,20 @@
 /*
- * pir.c
- *
+ * @file pir.c
+ * @brief PIR sensor interrupt handler implementation using STM32 HAL GPIO EXTI callback
+ * Implements external interrupt callback to count PIR sensor triggers and switch flag.
  *  Created on: Aug 10, 2025
- *      Author: abhir
+ *      Author: abhiram and anandu
  */
 
 #include "pir.h"
 
+/** @brief PIR sensor 1 interrupt count */
 volatile int pir_1_int_count = 0;
+
+/** @brief PIR sensor 2 interrupt count */
 volatile int pir_2_int_count = 0;
+
+/** @brief Switch debounce flag . */
 volatile int switch_flag = 1;
 
 

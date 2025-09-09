@@ -2,7 +2,7 @@
  * buzzer.h
  *
  *  Created on: Aug 13, 2025
- *      Author: abhir
+ *      Author: abhiram and anandu
  */
 
 #ifndef INC_BUZZER_H_

@@ -1,8 +1,8 @@
-/*
- * modbus.c
- *
+/**
+ * @file modbus.c
+ * @brief Modbus RTU protocol frame processing implementation over UART
  *  Created on: Aug 6, 2025
- *      Author: abhir
+ *      Author: abhiram and anandu
  */
 
 #include "modbus.h"
