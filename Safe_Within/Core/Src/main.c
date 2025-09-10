@@ -72,6 +72,7 @@ uint8_t data = 0;                        // 1-byte buffer for USART2 data
 int uart_index = 0;                      // Index for assembling modbus frame
 uart_t request_t, response_t;            // UART request and response buffers
 
+uint32_t time_check = 0;
 
 /* USER CODE END PV */
 

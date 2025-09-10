@@ -1,5 +1,5 @@
 /*
- /**
+ *
  * @file modbus.h
  * @brief Modbus RTU protocol implementation over UART
  * Declares Modbus function codes, external variables, and functions for processing Modbus frames.
