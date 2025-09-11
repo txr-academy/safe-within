@@ -1976,9 +1976,9 @@ static void MX_I2C1_Init(void)
  8000fd0:	4b0f      	ldr	r3, [pc, #60]	@ (8001010 <MX_I2C1_Init+0x50>)
  8000fd2:	2200      	movs	r2, #0
  8000fd4:	609a      	str	r2, [r3, #8]
-  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.OwnAddress1 = 32;
  8000fd6:	4b0e      	ldr	r3, [pc, #56]	@ (8001010 <MX_I2C1_Init+0x50>)
- 8000fd8:	2200      	movs	r2, #0
+ 8000fd8:	2220      	movs	r2, #32
  8000fda:	60da      	str	r2, [r3, #12]
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
  8000fdc:	4b0c      	ldr	r3, [pc, #48]	@ (8001010 <MX_I2C1_Init+0x50>)
@@ -2459,8 +2459,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
  80012a6:	f44f 1388 	mov.w	r3, #1114112	@ 0x110000
  80012aa:	623b      	str	r3, [r7, #32]
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
- 80012ac:	2300      	movs	r3, #0
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+ 80012ac:	2301      	movs	r3, #1
  80012ae:	627b      	str	r3, [r7, #36]	@ 0x24
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
  80012b0:	f107 031c 	add.w	r3, r7, #28
@@ -2548,8 +2548,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
  8001330:	f44f 1388 	mov.w	r3, #1114112	@ 0x110000
  8001334:	623b      	str	r3, [r7, #32]
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
- 8001336:	2300      	movs	r3, #0
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+ 8001336:	2301      	movs	r3, #1
  8001338:	627b      	str	r3, [r7, #36]	@ 0x24
   HAL_GPIO_Init(switch_GPIO_Port, &GPIO_InitStruct);
  800133a:	f107 031c 	add.w	r3, r7, #28
