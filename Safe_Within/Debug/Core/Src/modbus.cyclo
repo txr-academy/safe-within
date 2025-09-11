@@ -1,2 +1,2 @@
-../Core/Src/modbus.c:19:10:Modbus_CRC16	4
-../Core/Src/modbus.c:33:6:Process_Modbus_Frame	13
+../Core/Src/modbus.c:24:10:Modbus_CRC16	4
+../Core/Src/modbus.c:43:6:Process_Modbus_Frame	13

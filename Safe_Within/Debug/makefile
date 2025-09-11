@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Safe_Within
+BUILD_ARTIFACT_NAME := Safe_within
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Safe_Within.elf \
+Safe_within.elf \
 
 MAP_FILES += \
-Safe_Within.map \
+Safe_within.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Safe_Within.list \
+Safe_within.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Safe_Within.elf secondary-outputs
+main-build: Safe_within.elf secondary-outputs
 
 # Tool invocations
-Safe_Within.elf Safe_Within.map: $(OBJS) $(USER_OBJS) C:\Users\abhir\STM32CubeIDE\workspace_1.19.0\Safe_Within\STM32F446ZETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Safe_Within.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\abhir\STM32CubeIDE\workspace_1.19.0\Safe_Within\STM32F446ZETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Safe_Within.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Safe_within.elf Safe_within.map: $(OBJS) $(USER_OBJS) C:\Users\hp\STM32CubeIDE\workspace_1.19.0\Safe_within\STM32F446ZETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Safe_within.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\hp\STM32CubeIDE\workspace_1.19.0\Safe_within\STM32F446ZETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Safe_within.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Safe_Within.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Safe_Within.list"
+Safe_within.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Safe_within.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Safe_Within.elf Safe_Within.list Safe_Within.map default.size.stdout
+	-$(RM) Safe_within.elf Safe_within.list Safe_within.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

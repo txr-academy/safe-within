@@ -1,2 +1,8 @@
-../Core/Src/gsm.c:20:6:gsm_recieve_function	8	static
-../Core/Src/gsm.c:23:6:gsm_init	8	static
+../Core/Src/gsm.c:24:6:gsm_start_rx	8	static
+../Core/Src/gsm.c:40:16:send_at_cmd	32	static
+../Core/Src/gsm.c:64:13:gsm_init	88	static
+../Core/Src/gsm.c:101:13:gsm_wake	48	static
+../Core/Src/gsm.c:123:13:gsm_call	112	static
+../Core/Src/gsm.c:151:13:gsm_sms	168	static
+../Core/Src/gsm.c:201:6:call_sms_function	32	static
+../Core/Src/gsm.c:247:6:gsm_reset	16	static
