@@ -30,10 +30,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == PIR_1_Pin){
 		pir_1_int_count++;
+		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
 	}
 
 	else if (GPIO_Pin == PIR_2_Pin) {
 		pir_2_int_count++;
+		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_4);
 	}
 
 	else if(GPIO_Pin == switch_Pin){
@@ -46,7 +48,7 @@ States get_pir_state (void)
 	 if ((g_time - time_check) < PIR_MONITOR_INTERVAL)
 	 {
 		 // Case 1: Both PIRs active
-		 if ((pir_1_int_count > INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
+		 if ((pir_1_int_count > INTERRUPT_THRESHOLD_2) && (pir_2_int_count > INTERRUPT_THRESHOLD_2)){
 			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);

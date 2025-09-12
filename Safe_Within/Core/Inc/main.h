@@ -70,6 +70,7 @@ typedef enum {
 #define UART_TIMEOUT 1
 #define PIR_MONITOR_INTERVAL 2000
 #define INTERRUPT_THRESHOLD 2
+#define INTERRUPT_THRESHOLD_2 1
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -118,6 +119,10 @@ void Error_Handler(void);
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
+#define PIR_1_LED_Pin GPIO_PIN_3
+#define PIR_1_LED_GPIO_Port GPIOD
+#define PIR_2_LED_Pin GPIO_PIN_4
+#define PIR_2_LED_GPIO_Port GPIOD
 #define switch_Pin GPIO_PIN_7
 #define switch_GPIO_Port GPIOD
 #define switch_EXTI_IRQn EXTI9_5_IRQn
