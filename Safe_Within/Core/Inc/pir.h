@@ -20,4 +20,6 @@ extern volatile int pir_2_int_count;
 /** @brief External switch flag */
 extern volatile int switch_flag;
 
+States get_pir_state (void);
+
 #endif /* INC_PIR_H_ */

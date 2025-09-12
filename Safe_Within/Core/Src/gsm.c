@@ -223,6 +223,7 @@ void call_sms_function(void)
         		  gsm_call(EMERGENCY_CONTACT_2);
         		  gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
         		  HAL_Delay(1000);
+        		  break;
         	  }
         	  else{
                        result_wake = gsm_wake();
@@ -230,9 +231,11 @@ void call_sms_function(void)
         	      	   HAL_Delay(100);
                   }
            }
-       }
-       else{
+           break;
 
+       }
+
+       else{
     	   result_wake = gsm_wake();
     	   call_sms_count++;
     	   HAL_Delay(100);

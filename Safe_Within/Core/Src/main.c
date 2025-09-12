@@ -208,69 +208,27 @@ int main(void)
   while (1)
   {
 	  /* Monitor PIR sensors in given interval */
-	  while ((g_time - time_check) < PIR_MONITOR_INTERVAL)
-	  {
-
-		  // Case 1: Both PIRs active
-		  if ((pir_1_int_count > INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-			  pir_state = ACTIVE;
-			  // LED-Blue ON
-		  }
-		  // Case 2: One PIR abnormal -> Alert mode
-		  else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-			  pir_state = ALERT;
-			  break;
-			  // LED-Red ON
-		  }
-		  // Case 3: Both inactive -> Idle mode
-		  else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count <= INTERRUPT_THRESHOLD)){
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-			  pir_state = IDLE;
-			  // LED-Green ON
-
-		  }
-
-		  // Manual override using switch
-		  if (switch_flag == 0){
-			  buzzer_off();
-			  pir_state = ACTIVE;
-		  }
-
-		  // Handle Modbus data if frame received
-		  if (uart_flag){
-			  uart_idle_time = g_time - uart_int_time;
-			  if (uart_idle_time > UART_TIMEOUT){
-				  memcpy(request_t.message, modbus_frame, uart_index);
-				  request_t.size = uart_index;
-				  uart_index = 0;
-				  uart_flag = 0;
-				  Process_Modbus_Frame(modbus_frame);
-
-			  }
-		  }
+	  pir_state = get_pir_state();
+	  // Manual override using switch
+	  if (switch_flag == 0){
+		  buzzer_off();
+		  pir_state = ACTIVE;
+		  switch_flag = 1;
 	  }
-
 
 	  /* PIR ALERT state -> trigger buzzer and GSM call/sms */
 	  if (pir_state == ALERT){
 		  buzzer_on();    // Trigger buzzer
-		  int gsm_count=0;   //Initialize gsm_counter as 0.
+		  int gsm_count = 0;   //Initialize gsm_counter as 0.
 
 		  // Check for result response and retry upto 3 times until  result == GSM_STATE_OK
 		  while(gsm_count <= MAX_GSM_INIT_ATTEMPTS){
 			  if (result == GSM_STATE_OK){
-				  call_sms_function();  // Trigger Call and SMS via GSM
+				   call_sms_function();  // Trigger Call and SMS via GSM
+				   break;
 			  }
 			  else{
-				  result=gsm_init();  // Retry initialization
+				  result = gsm_init();  // Retry initialization
 				  gsm_count++;  // Increment gsm_counter until its value <=3
 			  }
 		  }
@@ -292,12 +250,6 @@ int main(void)
 
 		  }
 	  }
-
-	  // reset counters and timestamps  for each interval check
-	  time_check = g_time;
-	  pir_1_int_count = 0;
-	  pir_2_int_count = 0;
-
 
     /* USER CODE END WHILE */
 
