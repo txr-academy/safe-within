@@ -210,11 +210,11 @@ int main(void)
 	  /* Monitor PIR sensors in given interval */
 	  pir_state = get_pir_state();
 	  // Manual override using switch
-	  if (switch_flag == 0){
-		  buzzer_off();
-		  pir_state = ACTIVE;
-		  switch_flag = 1;
-	  }
+//	  if (switch_flag == 0){
+//		  buzzer_off();
+//		  pir_state = ACTIVE;
+//		  switch_flag = 1;
+//	  }
 
 	  /* PIR ALERT state -> trigger buzzer and GSM call/sms */
 	  if (pir_state == ALERT){

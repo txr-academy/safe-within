@@ -14,6 +14,7 @@
 #include "main.h"
 #include "stdio.h"
 #include "string.h"
+#include "pir.h"
 
 
 /** @def SIM_RX_BUFFER_SIZE
@@ -29,6 +30,7 @@
 #define AT_TIMEOUT 2000
 #define CALL_TIMEOUT 5000
 #define MESSAGE_TIMEOUT 1000
+#define CALL_INTERVAL 1000
 
 #define OKAY_RESPONSE "OK"
 #define EMERGENCY_CONTACT_1 "917994277760"

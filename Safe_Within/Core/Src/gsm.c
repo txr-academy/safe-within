@@ -6,6 +6,8 @@
  */
 
 #include "gsm.h"
+#include "pir.h"
+#include "buzzer.h"
 
 uint8_t sim_rx_byte = 0;
 char sim_rx_buffer[SIM_RX_BUFFER_SIZE] = {0};
@@ -205,44 +207,49 @@ void call_sms_function(void)
     int call_sms_maxtry =3;
     int call_sms_count=0;
     // Try call and sms by checking gsm condition state  3 times
-    while( call_sms_count<=call_sms_maxtry){
-
-
+    while( call_sms_count <= call_sms_maxtry){
        if (result_wake == GSM_STATE_OK) {
            gsm_call(EMERGENCY_CONTACT_1);
            gsm_sms(EMERGENCY_CONTACT_1, MESSAGE);
-           HAL_Delay(10000);
-
-
-           result_wake = gsm_wake();
-           int second_call_maxtry =3;
-           int second_call_count=0;
-           // call and sms secondary contact number after primary number by again AT\r\n command and trying 3 times for checking for appropriate response
-           while(second_call_count<=second_call_maxtry){
-        	  if (result_wake == GSM_STATE_OK) {
-        		  gsm_call(EMERGENCY_CONTACT_2);
-        		  gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
-        		  HAL_Delay(1000);
-        		  break;
-        	  }
-        	  else{
-                       result_wake = gsm_wake();
-        	      	   second_call_count++;
-        	      	   HAL_Delay(100);
-                  }
+           uint32_t call_time;
+           call_time = g_time;
+           // this loop acts as the timer before the second call
+           while(1){
+        	   if(g_time - call_time > CALL_INTERVAL){
+            	  result_wake = gsm_wake();
+            	  int second_call_maxtry = 3;
+            	  int second_call_count = 0;
+            	  // call and sms secondary contact number after primary number by again AT\r\n command and trying 3 times for checking for appropriate response
+            	  while(second_call_count<=second_call_maxtry){
+            		  if (result_wake == GSM_STATE_OK) {
+            			  gsm_call(EMERGENCY_CONTACT_3);
+            			  gsm_sms(EMERGENCY_CONTACT_3, MESSAGE);
+            			  HAL_Delay(1000);
+            			  break;
+            		  }
+            		  else{
+            			  result_wake = gsm_wake();
+            			  second_call_count++;
+            			  HAL_Delay(100);
+            		  }
+            	  }
+        	   }
+        	   if (switch_flag == 0){
+        		   buzzer_off();
+//        		   pir_state = ACTIVE;
+        		   switch_flag = 1;
+        		   break;
+        	   }
            }
            break;
-
        }
-
        else{
     	   result_wake = gsm_wake();
     	   call_sms_count++;
     	   HAL_Delay(100);
-           }
+       }
     }
 }
-
 
 /**
  * @brief Sends GSM reset command via UART to ensure GSM is in Command mode, not in text prompt mode.
