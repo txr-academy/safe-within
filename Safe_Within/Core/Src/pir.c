@@ -17,7 +17,9 @@ volatile int pir_2_int_count = 0;
 /** @brief Switch debounce flag . */
 volatile int switch_flag = 1;
 
-States pir_status = 0;
+volatile int detection_flag = 0;
+
+//States pir_status = 0;
 
 
 
@@ -41,52 +43,53 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	else if(GPIO_Pin == switch_Pin){
 		switch_flag = 0;
 	}
+
 }
 
-States get_pir_state (void)
-{
-	 if ((g_time - time_check) < PIR_MONITOR_INTERVAL)
-	 {
-		 // Case 1: Both PIRs active
-		 if ((pir_1_int_count > INTERRUPT_THRESHOLD_2) && (pir_2_int_count > INTERRUPT_THRESHOLD_2)){
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-			 pir_status = ACTIVE;
-			 // LED-Blue ON
-		 }
-		 // Case 2: One PIR abnormal -> Alert mode
-		 else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-			 pir_status = ALERT;
-			 // LED-Red ON
-		 }
-		 // Case 3: Both inactive -> Idle mode
-		 else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count <= INTERRUPT_THRESHOLD)){
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-			 pir_status = IDLE;
-			 // LED-Green ON
-		 }
-	 }
-
-	 else
-	 {
-		 // reset counters and time stamps for each interval check
-		 time_check = g_time;
-		 pir_1_int_count = 0;
-		 pir_2_int_count = 0;
-		 // switch back to default state
-//		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-//		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-//		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-//		 pir_status = IDLE;
-		 // LED-Green ON
-	 }
-
-	 return pir_status;
-}
+//States get_pir_state (void)
+//{
+//	 if ((g_time - time_check) < PIR_MONITOR_INTERVAL)
+//	 {
+//		 // Case 1: Both PIRs active
+//		 if ((pir_1_int_count > INTERRUPT_THRESHOLD_2) && (pir_2_int_count > INTERRUPT_THRESHOLD_2)){
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+//			 pir_status = ACTIVE;
+//			 // LED-Blue ON
+//		 }
+//		 // Case 2: One PIR abnormal -> Alert mode
+//		 else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count > INTERRUPT_THRESHOLD)){
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+//			 pir_status = ALERT;
+//			 // LED-Red ON
+//		 }
+//		 // Case 3: Both inactive -> Idle mode
+//		 else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count <= INTERRUPT_THRESHOLD)){
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+//			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+//			 pir_status = IDLE;
+//			 // LED-Green ON
+//		 }
+//	 }
+//
+//	 else
+//	 {
+//		 // reset counters and time stamps for each interval check
+//		 time_check = g_time;
+//		 pir_1_int_count = 0;
+//		 pir_2_int_count = 0;
+//		 // switch back to default state
+////		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+////		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+////		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+////		 pir_status = IDLE;
+//		 // LED-Green ON
+//	 }
+//
+//	 return pir_status;
+//}
 

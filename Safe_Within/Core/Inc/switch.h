@@ -11,6 +11,6 @@
 
 #include "main.h"
 
-States Switch(uint16_t GPIO_Pin);
+//States Switch(uint16_t GPIO_Pin);
 
 #endif /* INC_SWITCH_H_ */

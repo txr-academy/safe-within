@@ -1,2 +1,1 @@
-../Core/Src/pir.c:29:6:HAL_GPIO_EXTI_Callback	16	static
-../Core/Src/pir.c:46:8:get_pir_state	8	static
+../Core/Src/pir.c:31:6:HAL_GPIO_EXTI_Callback	16	static

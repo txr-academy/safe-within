@@ -58,9 +58,9 @@ typedef struct{
 	uint16_t size;
 } uart_t;
 
-typedef enum {
-	IDLE , ACTIVE, ALERT
-} States;
+//typedef enum {
+//	IDLE , ACTIVE, ALERT
+//} States;
 
 
 
@@ -101,7 +101,6 @@ void Error_Handler(void);
 #define PIR_1_EXTI_IRQn EXTI2_IRQn
 #define PIR_2_Pin GPIO_PIN_3
 #define PIR_2_GPIO_Port GPIOG
-#define PIR_2_EXTI_IRQn EXTI3_IRQn
 #define USB_PowerSwitchOn_Pin GPIO_PIN_6
 #define USB_PowerSwitchOn_GPIO_Port GPIOG
 #define USB_OverCurrent_Pin GPIO_PIN_7

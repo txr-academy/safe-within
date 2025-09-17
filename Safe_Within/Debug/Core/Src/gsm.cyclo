@@ -5,4 +5,4 @@
 ../Core/Src/gsm.c:125:13:gsm_call	3
 ../Core/Src/gsm.c:153:13:gsm_sms	8
 ../Core/Src/gsm.c:203:6:call_sms_function	7
-../Core/Src/gsm.c:258:6:gsm_reset	1
+../Core/Src/gsm.c:257:6:gsm_reset	1

@@ -29,6 +29,7 @@
 #include "string.h"
 #include "modbus.h"
 #include "i2c.h"
+#include "sensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +52,7 @@ I2C_HandleTypeDef hi2c1;
 TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -70,6 +72,9 @@ uart_t request_t, response_t;            // UART request and response buffers
 
 uint32_t time_check = 0;
 
+int range;
+detection_states sensor_state;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,6 +84,7 @@ static void MX_TIM6_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_UART4_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_UART5_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -163,8 +169,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_UART4_Init();
   MX_I2C1_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-  States pir_state;
+//  States pir_state;
 
   /*
    *  Trigger buzzer for short time to indicate that  device is  activated
@@ -207,17 +214,10 @@ int main(void)
                                  /* Main Loop */
   while (1)
   {
-	  /* Monitor PIR sensors in given interval */
-	  pir_state = get_pir_state();
-	  // Manual override using switch
-//	  if (switch_flag == 0){
-//		  buzzer_off();
-//		  pir_state = ACTIVE;
-//		  switch_flag = 1;
-//	  }
-
+	  range = get_object_distance();
+	  sensor_state = get_sensor_state(range);
 	  /* PIR ALERT state -> trigger buzzer and GSM call/sms */
-	  if (pir_state == ALERT){
+	  if (sensor_state == ALERT){
 		  buzzer_on();    // Trigger buzzer
 		  int gsm_count = 0;   //Initialize gsm_counter as 0.
 
@@ -410,6 +410,39 @@ static void MX_UART4_Init(void)
 }
 
 /**
+  * @brief UART5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART5_Init(void)
+{
+
+  /* USER CODE BEGIN UART5_Init 0 */
+
+  /* USER CODE END UART5_Init 0 */
+
+  /* USER CODE BEGIN UART5_Init 1 */
+
+  /* USER CODE END UART5_Init 1 */
+  huart5.Instance = UART5;
+  huart5.Init.BaudRate = 115200;
+  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.StopBits = UART_STOPBITS_1;
+  huart5.Init.Parity = UART_PARITY_NONE;
+  huart5.Init.Mode = UART_MODE_TX_RX;
+  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART5_Init 2 */
+
+  /* USER CODE END UART5_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -552,9 +585,6 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
