@@ -72,7 +72,7 @@ uart_t request_t, response_t;            // UART request and response buffers
 
 uint32_t time_check = 0;
 
-int range;
+float range;
 detection_states sensor_state;
 
 /* USER CODE END PV */
