@@ -60,8 +60,8 @@ all: main-build
 main-build: Safe_Within.elf secondary-outputs
 
 # Tool invocations
-Safe_Within.elf Safe_Within.map: $(OBJS) $(USER_OBJS) C:\GIT\safe-within\Safe_Within\STM32F446ZETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Safe_Within.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\GIT\safe-within\Safe_Within\STM32F446ZETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Safe_Within.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Safe_Within.elf Safe_Within.map: $(OBJS) $(USER_OBJS) C:\Users\abhir\OneDrive\Desktop\TXR\July\Project\safe-within\Safe_Within\STM32F446ZETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Safe_Within.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\abhir\OneDrive\Desktop\TXR\July\Project\safe-within\Safe_Within\STM32F446ZETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Safe_Within.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

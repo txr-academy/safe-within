@@ -21,6 +21,7 @@ float get_object_distance(void)
 	int arr_counter = 0;
 	int sum = 0;
 	float object_distance_avg = 0;
+//	__HAL_UART_FLUSH_DRREGISTER(&huart5);
 	while (arr_counter < OBJECT_DISTANCE_ARR_LEN)
 	{
 		HAL_UART_Receive(&huart5, sensor_data_buffer, SENSOR_DATA_RX_BITS, HAL_MAX_DELAY);
@@ -29,6 +30,11 @@ float get_object_distance(void)
 		char *rest = sensor_data_buffer; // Use a pointer to keep track of the rest of the string
 //		int object_distance;
 		int detection_flag = 0;
+
+		if (strstr(sensor_data_buffer, "OFF")){
+			return object_distance_avg;
+		}
+
 		if (strstr(sensor_data_buffer, "ON")){
 			detection_flag = 1;
 		}
@@ -44,8 +50,8 @@ float get_object_distance(void)
 			}
 		}
 		detection_flag=0;
-		object_distance_arr[arr_counter] = atoi(token);
-		arr_counter++;
+		object_distance_arr[arr_counter++] = atoi(token);
+		//arr_counter++;
 		memset(sensor_data_buffer, 0, sizeof(sensor_data_buffer));
 
 	}

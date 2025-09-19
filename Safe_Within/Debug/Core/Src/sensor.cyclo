@@ -1,2 +1,2 @@
-../Core/Src/sensor.c:18:7:get_object_distance	7
-../Core/Src/sensor.c:62:18:get_sensor_state	5
+../Core/Src/sensor.c:18:7:get_object_distance	8
+../Core/Src/sensor.c:68:18:get_sensor_state	5
