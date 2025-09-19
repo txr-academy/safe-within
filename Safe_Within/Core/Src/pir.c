@@ -64,7 +64,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 //			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 //			 pir_status = ALERT;
-//			 // LED-Red ON
+////			 // LED-Red ON
 //		 }
 //		 // Case 3: Both inactive -> Idle mode
 //		 else if ((pir_1_int_count <= INTERRUPT_THRESHOLD) && (pir_2_int_count <= INTERRUPT_THRESHOLD)){
@@ -72,7 +72,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
 //			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 //			 pir_status = IDLE;
-//			 // LED-Green ON
+////			 // LED-Green ON
 //		 }
 //	 }
 //

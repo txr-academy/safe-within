@@ -222,8 +222,8 @@ void call_sms_function(void)
             	  // call and sms secondary contact number after primary number by again AT\r\n command and trying 3 times for checking for appropriate response
             	  while(second_call_count<=second_call_maxtry){
             		  if (result_wake == GSM_STATE_OK) {
-            			  gsm_call(EMERGENCY_CONTACT_3);
-            			  gsm_sms(EMERGENCY_CONTACT_3, MESSAGE);
+            			  gsm_call(EMERGENCY_CONTACT_2);
+            			  gsm_sms(EMERGENCY_CONTACT_2, MESSAGE);
             			  HAL_Delay(1000);
             			  break;
             		  }
